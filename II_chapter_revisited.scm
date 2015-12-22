@@ -750,6 +750,8 @@
 
 ; 2.3 SYMBOLIC DATA
 
+; 2.3.1 Quotation
+
 (define exp (list 'car (list 'quote '(a b c))))
 ;(newline)
 ;(display x)
@@ -763,6 +765,8 @@
 ; Excersises
 
 ; 2.53
+
+#|
 
 (newline)
 (display (list 'a 'b 'c))
@@ -791,6 +795,8 @@
 (newline)
 (display (memq 'red '(red shoes blue socks)))
 ; (red shoes blue socks)
+
+|#
 
 ; 2.54
 
@@ -821,6 +827,7 @@
 ; '(quote a...) = (quote a...)
 ; (car (quote a...)) = quote = '
 
+; 2.3.2 Example: Symbolic Differentiation
 
 (define (deriv exp var)
   (cond ((number? exp) 0)
@@ -854,6 +861,7 @@
 (define (same-variable? var1 var2)
   (and (variable? var1) (variable? var2) (eq? var1 var2)))
 
+#|
 (define (make-sum a1 a2) 
   (cond ((=number? a1 0) a2)
         ((=number? a2 0) a1)
@@ -881,7 +889,9 @@
 
 (define (multiplicand x) (caddr x))
 
+|#
 
+#|
 (define expr1 '(+ x 3))
 (newline)
 (display (deriv expr1 'x))
@@ -893,12 +903,12 @@
 (define expr3 '(* (* x y) (+ x 3)))
 (newline)
 (display (deriv expr3 'x))
-
+|#
 
 ; Excercises
 
 ; 2.56
-
+#|
 (define (exponentiation? exp)
   (and (pair? exp) (eq? (car exp) '^)))
 
@@ -913,6 +923,7 @@
         ((=number? ex 1) bs)
         ((and (number? bs) (number? ex)) (fast-expt bs ex))
         (else (list '^ bs ex))))
+|#
 
 #|
 (define e '(^ 2 5))
@@ -936,6 +947,298 @@
 (display (make-exponentiation 'a 3))
 |#
 
+#|
 (define ex2 '(^ (+ x 2) b))
 (newline)
 (display (deriv ex2 'x))
+|#
+
+; 2.58
+
+; a)
+
+#|
+
+(define (make-sum a1 a2) 
+  (cond ((=number? a1 0) a2)
+        ((=number? a2 0) a1)
+        ((and (number? a1) (number? a2)) (+ a1 a2))
+        (else (list a1 '+ a2))))
+
+(define (make-product a1 a2) 
+  (cond ((or (=number? a1 0) (=number? a2 0)) 0)
+        ((=number? a1 1) a2)
+        ((=number? a2 1) a1)
+        ((and (number? a1) (number? a2)) (* a1 a2))
+        (else (list a1 '* a2))))
+
+(define (sum? x) 
+  (and (pair? x) (eq? (cadr x) '+)))
+
+(define (addend x) (car x))
+
+(define (augend x) (caddr x))
+
+(define (product? x) 
+  (and (pair? x) (eq? (cadr x) '*))) 
+
+(define (multiplier x) (car x))
+
+(define (multiplicand x) (caddr x))
+
+(define (exponentiation? exp)
+  (and (pair? exp) (eq? (cadr exp) '^)))
+
+(define (exponent exp)
+  (caddr exp))
+
+(define (base exp)
+  (car exp))
+
+(define (make-exponentiation bs ex)
+  (cond ((=number? ex 0) 1)
+        ((=number? ex 1) bs)
+        ((and (number? bs) (number? ex)) (fast-expt bs ex))
+        (else (list bs '^ ex))))
+
+(define expr '(1 + (2 * x)))
+(newline)
+(display (deriv expr 'x))
+
+|#
+
+; b)
+
+
+(define (contains? l item)
+  (cond ((null? l) #f)
+        ((eq? item (car l)) #t)
+        (else (contains? (cdr l) item))))
+
+(define (split l item)
+ (define (split-inner head tail i)
+   (cond 
+     ((null? tail) head)
+     ((eq? (car tail) i) (list head (cdr tail)))
+     (else (split-inner (append head (list (car tail))) (cdr tail) i))))
+ (split-inner '() l item))
+
+#|
+(define l '((a + b) * 5 + 3 * (c + d)))
+(newline)
+(display (contains? l '+ ))
+(newline)
+(display (contains? l '* ))
+(newline)
+(display (split l 'v))
+|#
+
+(define (make-sum a1 a2) 
+  (cond ((=number? a1 0) a2)
+        ((=number? a2 0) a1)
+        ((and (number? a1) (number? a2)) (+ a1 a2))
+        (else (list a1 '+ a2))))
+
+(define (make-product a1 a2) 
+  (cond ((or (=number? a1 0) (=number? a2 0)) 0)
+        ((=number? a1 1) a2)
+        ((=number? a2 1) a1)
+        ((and (number? a1) (number? a2)) (* a1 a2))
+        (else (list a1 '* a2))))
+
+(define (sum? x) 
+  (and (pair? x) (contains? x '+)))
+
+(define (addend x) 
+  (let ((candidate (car (split x '+))))
+    (if (> (length candidate) 1)
+      candidate
+      (car candidate))))
+
+(define (augend x) 
+  (let ((candidate (cadr (split x '+))))
+    (if (> (length candidate) 1)
+        candidate
+        (car candidate))))
+
+(define (product? x) 
+  (and (pair? x) (not (contains? x '+)) (contains? x '*))) 
+
+
+(define (multiplier x) 
+  (let ((candidate (car (split x '*))))
+    (if (> (length candidate) 1)
+      candidate
+      (car candidate))))
+
+(define (multiplicand x) 
+  (let ((candidate (cadr (split x '*))))
+    (if (> (length candidate) 1)
+        candidate
+        (car candidate))))
+
+(define (exponentiation? exp)
+  (and (pair? exp) (eq? (cadr exp) '^)))
+
+(define (exponent exp)
+  (caddr exp))
+
+(define (base exp)
+  (car exp))
+
+(define (make-exponentiation bs ex)
+  (cond ((=number? ex 0) 1)
+        ((=number? ex 1) bs)
+        ((and (number? bs) (number? ex)) (fast-expt bs ex))
+        (else (list bs '^ ex))))
+
+#|
+(define expr '(2 * x + x * (2 * x + 5)))
+
+(newline)
+(display (sum? expr))
+(newline)
+(display (product? expr))
+
+(newline)
+(display (deriv expr 'x))
+|#
+
+; 2.3.3 Representing sets
+
+
+; Sets as unordered lists
+
+#|
+(define (element-of-set? x set)
+  (cond ((null? set) #f)
+        ((equal? (list x) (list (car set))) #t)
+        (else (element-of-set? x (cdr set)))))
+
+
+(define (adjoin-set x set)
+  (if (element-of-set? x set)
+    set
+    (cons x set)))
+
+(define (intersection-set set1 set2)
+  (cond ((or (null? set1) (null? set2)) '())
+        ((element-of-set? (car set1) set2) 
+         (cons (car set1) (intersection-set (cdr set1) set2)))
+        (else (intersection-set (cdr set1) set2))))
+
+; Excersices
+
+; 2.59
+
+(define (union-set set1 set2)
+  (define (union-set-inner union set)
+    (cond ((null? set) union)
+          ((element-of-set? (car set) union)
+           (union-set-inner union (cdr set)))
+          (else (union-set-inner (cons (car set) union) (cdr set)))))
+  (union-set-inner set1 set2))
+
+(define s1 '(1 2 3 4 5))
+(define s2 '(3 4 5 6 7))
+
+(newline)
+(display (element-of-set? 2 s1))
+(newline)
+(display (element-of-set? 2 s2))
+(newline)
+(display (adjoin-set 2 s1))
+(newline)
+(display (adjoin-set 6 s1))
+(newline)
+(display (intersection-set s1 s2))
+(newline)
+(display (union-set s1 s2))
+
+|#
+
+; 2.60
+
+#|
+(define (element-of-set? x set)
+  (cond ((null? set) #f)
+        ((equal? (list x) (list (car set))) #t)
+        (else (element-of-set? x (cdr set)))))
+
+(define (adjoin-set x set)
+    (cons x set))
+
+(define (intersection-set set1 set2)
+  (cond ((or (null? set1) (null? set2)) '())
+        ((element-of-set? (car set1) set2) 
+         (cons (car set1) (intersection-set (cdr set1) set2)))
+        (else (intersection-set (cdr set1) set2))))
+
+
+(define (union-set set1 set2)
+ (append set1 set2))
+
+(define s1 '(1 2 3 4 5))
+(define s2 '(3 4 5 6 7))
+(newline)
+(display (element-of-set? 2 s1))
+(newline)
+(display (element-of-set? 2 s2))
+(newline)
+(display (adjoin-set 2 s1))
+(newline)
+(display (adjoin-set 6 s1))
+(newline)
+(display (intersection-set s1 s2))
+(newline)
+(display (union-set s1 s2))
+|#
+
+; Sets as ordered lists
+
+(define (element-of-set? x set)
+  (cond ((null? set) #f)
+        ((= x (car set)) #t)
+        ((< x (car set)) #f)
+        (else (element-of-set? x (cdr set)))))
+
+(define (intersection-set set1 set2)
+  (if (or (null? set1) (null? set2))
+    '()
+    (let ((x1 (car set1))
+          (x2 (car set2)))
+      (cond ((= x1 x2)
+             (cons x1 (intersection-set (cdr set1) (cdr set2))))
+            ((< x1 x2) 
+             (intersection-set (cdr set1) set2))
+            (else
+              (intersection-set set1 (cdr set2)))))))
+
+; Excersises
+
+; 2.61
+
+(define (adjoin-set x set)
+  (cond ((null? set ) (list x))
+        ((> x (car set)) (cons (car set) (adjoin-set x (cdr set))))
+        ((= x (car set)) set)
+        ((< x (car set)) (cons x set))))
+
+(define s1 '())
+(newline)
+(display (adjoin-set 2 s1))
+(define s1 '(1))
+(newline)
+(display (adjoin-set 2 s1))
+(define s1 '(2))
+(newline)
+(display (adjoin-set 2 s1))
+(define s1 '(3))
+(newline)
+(display (adjoin-set 2 s1))
+(define s1 '(1 2 3))
+(newline)
+(display (adjoin-set 2 s1))
+(define s1 '(1 4))
+(newline)
+(display (adjoin-set 2 s1))
