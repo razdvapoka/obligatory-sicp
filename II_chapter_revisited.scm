@@ -1196,6 +1196,7 @@
 
 ; Sets as ordered lists
 
+#|
 (define (element-of-set? x set)
   (cond ((null? set) #f)
         ((= x (car set)) #t)
@@ -1242,3 +1243,85 @@
 (define s1 '(1 4))
 (newline)
 (display (adjoin-set 2 s1))
+
+; 2.62
+
+(define (union-set set1 set2)
+  (cond ((null? set1) set2)
+        ((null? set2) set1)
+        ((> (car set1) (car set2)) 
+         (cons (car set2) 
+               (union-set set1 (cdr set2))))
+        ((< (car set1) (car set2)) 
+         (cons (car set1) 
+               (union-set (cdr set1) set2)))
+        (else (cons (car set1) (union-set (cdr set1) (cdr set2))))))
+
+(define s1 '(1 4 5 12))
+(define s2 '(3 4 5 6 7 8 9 10))
+
+(newline)
+(display (union-set s1 s2))
+
+|#
+
+; Sets as binary trees
+
+(define (make-tree entry left right)
+  (list entry left right))
+
+(define (entry tree)
+  (car tree))
+
+(define (left-branch tree)
+  (cadr tree))
+
+(define (right-branch tree)
+  (caddr tree))
+
+
+(define (element-of-set? x set)
+  (cond ((null? tree) #f)
+        ((= (entry tree) x) #t)
+        ((> (entry tree) x)
+         (element-of-set? x (left-branch tree)))
+        ((< (entry tree) x)
+         (element-of-set? x (right-branch tree)))))
+
+(define (adjoin-set x set)
+  (cond ((null? set) (make-tree x '() '()))
+        ((= x (entry set)) set)
+        ((> x (entry set)) 
+         (make-tree (entry set)
+                    (left-branch set)
+                    (adjoin-set x (right-branch set))))
+        ((< x (entry set))
+         (make-tree (entry set)
+                    (adjoin-set x (left-branch set))
+                    (right-branch set)))))
+
+(define t (list 5 
+                (list 3 
+                      (list 1 
+                            '()
+                            '()) 
+                      '()) 
+                (list 9 
+                      (list 7 
+                            '()
+                            '()) 
+                      (list 11 
+                            '()
+                            '()))))
+(newline)
+(display t)
+
+(newline)
+(display (adjoin-set 4 t))
+
+(newline)
+(display (adjoin-set 12 t))
+
+; Excersises 
+
+; 2.63
